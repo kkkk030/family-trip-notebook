@@ -70,7 +70,7 @@ function switchTab(name) {
   state.tab = name;
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('active', button.dataset.tab === name));
   document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === name));
-  location.hash = `key=${encodeURIComponent(accessKey)}&tab=${name}`;
+  location.hash = accessKey ? `key=${encodeURIComponent(accessKey)}&tab=${name}` : `tab=${name}`;
 }
 function render() {
   const trip = state.trip;
@@ -198,6 +198,7 @@ $('#cancelDialog').addEventListener('click', () => $('#itemDialog').close());
 $('#closeTripDialog').addEventListener('click', () => $('#tripDialog').close());
 $('#cancelTripDialog').addEventListener('click', () => $('#tripDialog').close());
 $('#shareButton').addEventListener('click', async () => {
+  if (!accessKey) { alert('가족 공유 링크로 먼저 접속해주세요.'); return; }
   try { await navigator.clipboard.writeText(`${location.origin}${location.pathname}#key=${encodeURIComponent(accessKey)}`); $('#shareButton').textContent = '✓ 링크 복사됨'; }
   catch { $('#shareButton').textContent = '주소창 링크를 복사해주세요'; }
   setTimeout(() => { $('#shareButton').textContent = '↗ 링크 복사'; }, 2500);
@@ -206,3 +207,6 @@ $('#shareButton').addEventListener('click', async () => {
 switchTab(['overview', 'plan', 'log', 'research'].includes(initialLink.get('tab')) ? initialLink.get('tab') : 'overview');
 refresh();
 setInterval(() => { if (!$('#itemDialog').open && !$('#tripDialog').open) refresh({ quiet: true }); }, 20000);
+window.addEventListener('hashchange', () => {
+  if (!accessKey && new URLSearchParams(location.hash.slice(1)).get('key')) location.reload();
+});
